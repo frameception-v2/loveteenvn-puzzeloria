@@ -17,19 +17,86 @@ import { createStore } from "mipd";
 import { Label } from "~/components/ui/label";
 import { PROJECT_TITLE } from "~/lib/constants";
 
-function ExampleCard() {
+function shuffleArray(array: number[]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function PuzzleGame() {
+  const [tiles, setTiles] = useState<number[]>(shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 0]));
+  const [moves, setMoves] = useState(0);
+  const [isSolved, setIsSolved] = useState(false);
+
+  const handleClick = (index: number) => {
+    if (isSolved) return;
+    
+    const emptyIndex = tiles.indexOf(0);
+    const clickedTile = tiles[index];
+    
+    // Check if clicked tile is adjacent to empty space
+    const row = Math.floor(index / 3);
+    const col = index % 3;
+    const emptyRow = Math.floor(emptyIndex / 3);
+    const emptyCol = emptyIndex % 3;
+    
+    if ((Math.abs(row - emptyRow) === 1 && col === emptyCol) || 
+        (Math.abs(col - emptyCol) === 1 && row === emptyRow)) {
+      const newTiles = [...tiles];
+      newTiles[emptyIndex] = clickedTile;
+      newTiles[index] = 0;
+      setTiles(newTiles);
+      setMoves(moves + 1);
+      
+      // Check if puzzle is solved
+      if (newTiles.slice(0, 8).every((val, i) => val === i + 1)) {
+        setIsSolved(true);
+      }
+    }
+  };
+
+  const resetGame = () => {
+    setTiles(shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 0]));
+    setMoves(0);
+    setIsSolved(false);
+  };
+
   return (
     <Card className="border-neutral-200 bg-white">
       <CardHeader>
-        <CardTitle className="text-neutral-900">Welcome to the Frame Template</CardTitle>
+        <CardTitle className="text-neutral-900">Puzzeloria</CardTitle>
         <CardDescription className="text-neutral-600">
-          This is an example card that you can customize or remove
+          Slide the tiles to solve the puzzle!
         </CardDescription>
       </CardHeader>
       <CardContent className="text-neutral-800">
-        <p>
-          Your frame content goes here. The text is intentionally dark to ensure good readability.
-        </p>
+        <div className="grid grid-cols-3 gap-1 w-[150px] mx-auto">
+          {tiles.map((tile, index) => (
+            <button
+              key={index}
+              onClick={() => handleClick(index)}
+              className={`w-10 h-10 flex items-center justify-center 
+                ${tile === 0 ? 'bg-transparent' : 'bg-purple-500 hover:bg-purple-600'} 
+                text-white font-bold rounded-md transition-colors`}
+              disabled={tile === 0}
+            >
+              {tile !== 0 && tile}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 text-center">
+          <p className="text-neutral-600">Moves: {moves}</p>
+          {isSolved && (
+            <div className="mt-2">
+              <p className="text-green-600 font-bold">You solved it!</p>
+              <PurpleButton onClick={resetGame} className="mt-2">
+                Play Again
+              </PurpleButton>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -137,7 +204,7 @@ export default function Frame(
     >
       <div className="w-[300px] mx-auto py-2 px-2">
         <h1 className="text-2xl font-bold text-center mb-4 text-neutral-900">{title}</h1>
-        <ExampleCard />
+        <PuzzleGame />
       </div>
     </div>
   );
